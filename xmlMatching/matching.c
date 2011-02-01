@@ -3,18 +3,18 @@
 
 // Table of matches and what to do when we get them
 
-struct matchTable {
+struct matchTableEntry {
     char *match;
     void (*cb)(char *);
 };
 
 void cb(char *);
-struct matchTable 
+struct matchTableEntry p = {"PLAIN", cb};
+struct matchTableEntry s = {"success", cb};
+struct matchTableEntry b = {"bind", cb};
+struct matchTableEntry se = {"session", cb};
 
-struct matchTable table[] = {{"PLAIN", cb}, {"success", cb},
-		       {"bind", cb}, {"session", cb}};
-
-int tableSize = 4;
+struct matchTableEntry *table[] = {&p, &s, &b, &se, NULL};
 
 void cb(char * str) {
     printf("%s", str);
@@ -22,10 +22,18 @@ void cb(char * str) {
 
 int main() {
     int i = 0;
-    for(i = 0; i < tableSize; i++) {
-	table[i].cb(table[i].match);
+    FILE* fp = fopen("./test", "r");
+    char c = 1;
+    while(c != -1) {
+	c = (char) fgetc(fp);
+	printf("%c", c);
+    }
+    /*
+    for(i = 0; table[i]; i++) {
+	table[i]->cb(table[i]->match);
 	printf("\n");
     }
+    */
     return 0;
 }
 
