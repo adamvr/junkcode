@@ -15,13 +15,14 @@ Publish() {
     mosquitto_pub -t "$progname" -h "$server" -m "$1"
 }
 
+F() {
+    `which $0`
+}
+
 
 
 #[ -f "$configfile" ] || echo "You need to make a config file, dolt!"; exit 2
 
 [ $# -ne 2 ] || Usage
 
-(sh -c "$1" \
-    && Publish "$1 completed successfully" \
-    || Publish "$1 failed" \
-) 2>/dev/null 1>&2 &
+sh -c "$1" 2>&1 | mosquitto_pub -h localhost -t "$1" -l
