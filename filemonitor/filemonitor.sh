@@ -2,6 +2,7 @@
 
 progname=`basename $0`
 tmpfile=/tmp/filemonitor$RANDOM
+pollperiod=5
 
 Usage() {
     echo $progname file; exit 1
@@ -17,11 +18,10 @@ DoesntExist() {
 cp $1 $tmpfile
 while true
 do
-    if [ `find $1 -mtime -2s` ]
+    if [ `find $1 -mtime -${pollperiod}s` ]
     then
-	d="`diff $1 $tmpfile`"
-	echo $d 2>&1 | mosquitto_pub -h localhost -t "`basename $1`" -s
+	diff -u $tmpfile $1 | mosquitto_pub -h localhost -t "`basename $1`" -s
 	cp $1 $tmpfile
     fi
-    sleep 1
+    sleep ${pollperiod}
 done
