@@ -5,6 +5,7 @@ sys = require("sys");
 var messages = []
 
 var app = express.createServer();
+app.use(express.bodyDecoder());
 
 sub = spawn('mosquitto_sub', ['-v', '-t', '#']);
 
@@ -19,6 +20,39 @@ function addMessage(topic, msg) {
     } else {
 	messages[topic] = new Array(msgObj);
     }
+}
+
+function publish(topic, payload, qos, retain) {
+    sys.log(topic + payload + qos + retain);
+    var args = [];
+    if(topic) {
+	args.push('-t');
+	args.push(topic);
+    } else {
+	return false;
+    }
+
+    if(payload) {
+	args.push('-m');
+	args.push(payload);
+    } else {
+	return false;
+    }
+
+    if(retain && retain === true) {
+	args.push('-r');
+    }
+
+    if(qos && (qos >= 0 && qos <= 3)) {
+	args.push('-q');
+	args.push(qos);
+    }
+
+
+    sys.log("Spawning mosquitto_pub with arguments " + args);
+
+    sub = spawn('mosquitto_pub', args);
+    return true;
 }
 
 sub.stdout.on('data', function(data) {
@@ -40,61 +74,65 @@ sub.on('exit', function(data) {
 
 app.get('/:topic', function(req, res, next){
     var topic = req.params.topic;
+    /* No 'since' parameter supplied, call get all version of app.get */ 
     if(req.query.since === undefined) {
 	next();
+	return;
     }
     var since = new Date(req.query.since);
     var json = new Object();
 
-    sys.log(topic + " " + since + " requested");
+    sys.log("Messages on " + topic + " since " + since + " requested");
 
     json.topic = topic;
     if(messages[topic] === undefined) {
 	json.messages = [];
     } else {
-	json.messages = messages[topic].reduce(function(v) {
-	    sys.log(JSON.stringify(v));
+	sys.log("reducing");
+	json.messages = messages[topic].filter(function(v) {
+	    sys.log(sys.inspect(v));
 	    if(v.timestamp > since) {
-		sys.log("> since");
+		sys.log("yes");
 		return true;
 	    } else {
-		sys.log("< since");
+		sys.log("nooo");
 		return false;
 	    }
 	});
+	sys.log("Reduced");
     }
 
-    /*
-    json.messages = [];
-    if(messages[topic]) {
-	for(var k in messages[topic]) {
-	    sys.log(messages[topic][k].timestamp + " " + messages[topic][k].payload);
-	    if(messages[topic][k].timestamp > timestamp) {
-		json.messages.push(messages[topic][k]);
-	    }
-	}
-    }
-    */
     sys.log(JSON.stringify(json));
     res.send(json);
 });
 
 app.get('/:topic', function(req, res) {
     var topic = req.params.topic;
-    res.send({"topic":topic, "messages":messages[topic]});
+    sys.log("All messages on topic " + topic + " requested");
+    res.send({"topic":topic, "messages":messages[topic]||[]});
 });
 
-/*
 app.post('/:topic', function(req,res) {
     var topic = req.params.topic;
-    var msg = JSON.stringify(req.body);
+    var msg = req.body;
+    var payload = msg.payload
 
-    sys.log(msg);
-    sys.log("Publishing message " + msg + " to topic " + topic);
-    pub = spawn('mosquitto_pub', ['-t', topic, '-m', msg]);
+    sys.log(JSON.stringify(msg));
+
+    if(payload === undefined) {
+	sys.log("Invalid publish request received: " + msg);
+	res.send({"success":"false", "reason":"Invalid request"});
+	return;
+    }
+
+    var qos = req.body.qos || 0;
+    var retain = req.body.retain || false;
+
+    sys.log(payload);
+    sys.log("Publishing message " + payload + " to topic " + topic + " with qos " + qos + " retaining " + retain);
+    publish(topic, payload, qos, retain);
 
     res.send({"success":"true"});
 });
-*/
 
 app.listen(3000);
