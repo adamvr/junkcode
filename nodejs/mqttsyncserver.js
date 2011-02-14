@@ -88,18 +88,13 @@ app.get('/:topic', function(req, res, next){
     if(messages[topic] === undefined) {
 	json.messages = [];
     } else {
-	sys.log("reducing");
 	json.messages = messages[topic].filter(function(v) {
-	    sys.log(sys.inspect(v));
 	    if(v.timestamp > since) {
-		sys.log("yes");
 		return true;
 	    } else {
-		sys.log("nooo");
 		return false;
 	    }
 	});
-	sys.log("Reduced");
     }
 
     sys.log(JSON.stringify(json));
@@ -109,6 +104,8 @@ app.get('/:topic', function(req, res, next){
 app.get('/:topic', function(req, res) {
     var topic = req.params.topic;
     sys.log("All messages on topic " + topic + " requested");
+    /* Send the contents of messages[topic] or
+     * an empty array if that's undefined */
     res.send({"topic":topic, "messages":messages[topic]||[]});
 });
 
