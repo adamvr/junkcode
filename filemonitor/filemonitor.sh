@@ -5,7 +5,7 @@ tmpfile=/tmp/filemonitor$RANDOM
 pollperiod=5
 
 Usage() {
-    echo $progname file; exit 1
+    echo Usage: $progname file; exit 1
 }
 
 DoesntExist() {
@@ -15,7 +15,7 @@ DoesntExist() {
 [ $# -eq 1 ] || Usage
 [ -f $1 ] || DoesntExist $1
 
-cp $1 $tmpfile
+cp -f $1 $tmpfile
 while true
 do
     if [ `find $1 -mtime -${pollperiod}s` ]
