@@ -69,7 +69,7 @@ sub.stdout.on('data', function(data) {
 });
 
 sub.on('exit', function(data) {
-    sys.log("Shit's exitin");
+    sys.log("mosquitto_sub is exiting for some reason");
 });
 
 app.get('/:topic', function(req, res, next){
