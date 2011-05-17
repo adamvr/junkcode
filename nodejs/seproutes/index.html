@@ -1,0 +1,31 @@
+<html>
+<title> Time of Day </title>
+<script src="/jquery"></script>
+<script src="/pretty"></script>
+<script>
+    $('document').ready(function() {
+	$('#area').click(function() {
+	    $.post('/experiment', {a:'b'}, function(data) {
+		var loc = $(data)[0].experiment;
+		$('#area').val('Experiment location: ' + loc + '\n');
+		$('#area').val($('#area').val() + 'Getting experiment results...\n');
+
+		$.get(loc + '/result', function(data) {
+		    $('#area').val($('#area').val() + 'Experiment result: ' + JSON.stringify($(data)[0]));
+		});
+	    });
+	});
+    });
+
+
+</script>
+
+<body>
+    <h1> Time of Day Experiment </h1>
+
+    <textarea rows='10' cols='80' id='area'> Waiting for input </textarea>
+
+    <button id='butt'> Do experiment </button>
+</body>
+</html>
+   
