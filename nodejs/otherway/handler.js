@@ -14,8 +14,6 @@ function Handler() {
     this.runner = new Runner();
 }
 
-
-
 Runner.prototype.run = function(exp) {
     var runner = this;
     if(runner.running) {
@@ -30,7 +28,6 @@ Runner.prototype.run = function(exp) {
 	return;
     }
 }
-
 
 Handler.prototype.createExperiment = function(desc, cb) {
     var exp = {id: this.experiments.length, state:'fuckinqueued'};
