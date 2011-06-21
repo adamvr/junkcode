@@ -1,30 +1,30 @@
 resque = require 'coffee-resque'
 util = require 'util'
 
-conn = resque.connect
+conn = resque.connect 
     host: 'localhost'
     port: 6379
-    callbacks: 
-        add: (a, b, cb) ->
+    callbacks:
+        hello: (args, cb) ->
+            util.log 'starting hello'
             setTimeout () ->
-                #cb a+b
-                util.log 'lol'
-            , 2000
-        success: (arg, cb) -> cb()
-        failure: (arg, cb) -> cb new Error 'fail'
+                util.log 'finishing badhello'
+                cb hello: true
+            , 10000
+        badhello: (args, cb) ->
+            util.log 'starting badhello'
+            setTimeout () ->
+                util.log 'finishing badhello'
+                cb hello: false
+            , 10000
 
-worker = conn.worker '*'
+w = conn.worker('*')
+w.on 'poll', (worker, queue) ->
+    util.log util.inspect worker
+w.on 'job', (worker, queue, job) ->
+    util.log util.inspect worker
 
-worker.on 'poll', () -> util.log 'polling'
-worker.on 'job', (worker, queue, job) ->
-    util.log "Queue: #{util.log util.inspect queue}, Job: #{util.log util.inspect job}"
-worker.on 'error', (err, worker, queue, job) ->
-    util.log "Error: #{util.log util.inspect err} Queue: #{util.log util.inspect queue}, Job: #{util.log util.inspect job}"
-worker.on 'success', (worker, queue, job, result) ->
-    util.log "Result: #{util.log result} Queue: #{util.log queue}, Job: #{util.log job}"
+w.start()
 
-worker.start()
-
-setInterval () ->
-    conn.enqueue 'math', 'add', [1,2]
-, 1000
+conn.enqueue 'work', 'hello', [{lol: true}]
+conn.enqueue 'work', 'badhello', [{lol: false}]
